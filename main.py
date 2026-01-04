@@ -2,23 +2,26 @@ from datetime import datetime, UTC
 from functools import partial
 from typing import Literal, Annotated
 from uuid import UUID, uuid4
+import json
 
-from pydantic import BaseModel, ValidationError, Field, EmailStr, HttpUrl, SecretStr, ValidationError, ValidationInfo, field_validator, model_validator, computed_field
+from pydantic import BaseModel, ValidationError, Field, EmailStr, HttpUrl, SecretStr, ValidationError, ValidationInfo, field_validator, model_validator, computed_field, ConfigDict
 
 
 class User(BaseModel):
-    uid: UUID = Field(default_factory=uuid4)
+    model_config = ConfigDict(populate_by_name=True,
+                              strict=True,
+                              extra="allow",
+                              #   validate_assignment=True,
+                              frozen=True
+                              )
 
+    uid: UUID = Field(default_factory=uuid4)
     username: Annotated[str, Field(min_length=3, max_length=20)]
     email: EmailStr
-
     password: SecretStr
     website: HttpUrl | None = None
-
     age: Annotated[int, Field(ge=13, le=120)]
-
     verified_at: datetime | None = None
-
     bio: str = ""
     is_active: bool = True
 
@@ -87,7 +90,24 @@ class UserRegisteration(BaseModel):
         return self
 
 
-# try:
+user_data = {
+    "id": "3bc4bf25-1b73-44da-9078-f2bb310c7374",
+    "username": "Arman_Ahmed",
+    "email": "ArmnaAhmed@gmail.com",
+    "age": 24,
+    "password": "secret123",
+    "notes": "Hello World",
+}
+
+user = User.model_validate_json(json.dumps(user_data))
+
+user.email = "ArmanAhmed3@gmail.com"
+
+print(user.model_dump_json(
+    indent=2, by_alias=True))
+
+
+# try:s
 #     registration = UserRegisteration(
 #         email="ArmanAhmed@gmail.com",
 #         password="secret123",
@@ -96,46 +116,46 @@ class UserRegisteration(BaseModel):
 # except ValidationError as e:
 #     print(e)
 
-post_data = {
-    "title": "Understanding Pydantic Models",
-    "content": "Pydantic makes data validation easy and intuitive...",
-    "slug": "understanding-pydantic",
-    "author": {
-        "username": "Arman_Ahmed",
-        "email": "ArmnaAhmed@gmail.com",
-        "age": 24,
-        "password": "secret123",
-    },
-    "comments": [
-        {
-            "content": "I think i understand nested models now",
-            "author_email": "student@gmail.com",
-            "likes": 10,
-        },
-        {
-            "content": "Can you explain how to use computed fields?",
-            "author_email": "viewer@gmail.com",
-            "likes": 15,
-        }
-    ]
-}
+# post_data = {
+#     "title": "Understanding Pydantic Models",
+#     "content": "Pydantic makes data validation easy and intuitive...",
+#     "slug": "understanding-pydantic",
+#     "author": {
+#         "username": "Arman_Ahmed",
+#         "email": "ArmnaAhmed@gmail.com",
+#         "age": 24,
+#         "password": "secret123",
+#     },
+#     "comments": [
+#         {
+#             "content": "I think i understand nested models now",
+#             "author_email": "student@gmail.com",
+#             "likes": 10,
+#         },
+#         {
+#             "content": "Can you explain how to use computed fields?",
+#             "author_email": "viewer@gmail.com",
+#             "likes": 15,
+#         }
+#     ]
+# }
 
-post = BlogPost.model_validate(post_data)
+# post = BlogPost.model_validate(post_data)
 
-print(post.model_dump_json(indent=2))
+# print(post.model_dump_json(indent=2))
 
 
-user = User(
-    username="Arman_Ahmed",
-    email="ArmnaAhmed@gmail.com",
-    age=24,
-    password="secret123",
-    website="armanahmed.com",
-    first_name="Arman",
-    last_name="Ahmed",
-)
+# user = User(
+#     username="Arman_Ahmed",
+#     email="ArmnaAhmed@gmail.com",
+#     age=24,
+#     password="secret123",
+#     website="armanahmed.com",
+#     first_name="Arman",
+#     last_name="Ahmed",
+# )
 
-print(user.model_dump_json(indent=2))
+# print(user.model_dump_json(indent=2))
 
 
 # try:
